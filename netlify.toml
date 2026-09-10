@@ -1,0 +1,16 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+# Proxy Screener.in API to avoid CORS
+[[redirects]]
+  from = "/api/screener/*"
+  to = "https://www.screener.in/api/:splat"
+  status = 200
+  force = true
+
+# SPA fallback
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
