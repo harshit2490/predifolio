@@ -145,20 +145,18 @@ function StockCard({ stock, onEdit, onDelete, onUpdate, onDragHandleClick }) {
 
     // 2. Persist to Supabase
     try {
-      // Try updating sell_predictions column first (if schema migration was run)
+      // Update sell_predictions column directly
       const { error } = await supabase
         .from('stocks')
         .update({
           sell_predictions: updatedPredictions,
-          sell_prediction_price: primaryPrice,
-          tags: updatedTags,
           updated_at: new Date().toISOString(),
         })
         .eq('id', stock.id);
 
       if (error) {
-        console.warn('sell_predictions column missing in Supabase, saving via tags and sell_prediction_price fallback:', error.message);
-        // Fallback update without sell_predictions column
+        console.warn('sell_predictions update failed, attempting legacy fallback:', error.message);
+        // Fallback update if sell_predictions column is not yet present
         const fallbackRes = await supabase
           .from('stocks')
           .update({
