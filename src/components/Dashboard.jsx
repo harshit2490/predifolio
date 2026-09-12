@@ -6,6 +6,7 @@ import SummaryBar from './SummaryBar';
 import StockList from './StockList';
 import AddStockModal from './AddStockModal';
 import EditStockModal from './EditStockModal';
+import { getPredictionsFromStock } from '../utils/predictionUtils';
 import toast from 'react-hot-toast';
 import '../styles/dashboard.css';
 
@@ -88,8 +89,31 @@ function Dashboard() {
       }
 
       setStocks(fetched);
-    } catch (err) {
-      toast.error('Failed to load stocks: ' + (err.message || 'Unknown error'));
+
+      // Auto-backfill: if sell_predictions column exists in DB, ensure targets from tags/cache are synced into it
+      fetched.forEach(async (s) => {
+        if (!s.sell_predictions || s.sell_predictions.length === 0) {
+          const buyPrice = Number(s.buy_price) || 0;
+          const invested = Number(s.invested_amount) || 0;
+          const qty =
+            s.buy_stocks != null
+              ? Number(s.buy_stocks)
+              : buyPrice > 0
+                ? Math.round(invested / buyPrice)
+                : 0;
+          const preds = getPredictionsFromStock(s, qty);
+          if (preds.length > 0) {
+            try {
+              await supabase
+                .from('stocks')
+                .update({ sell_predictions: preds })
+                .eq('id', s.id);
+            } catch {
+              // Ignore if column doesn't exist yet
+            }
+          }
+        }
+      });
     } finally {
       setLoading(false);
     }

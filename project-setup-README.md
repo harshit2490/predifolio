@@ -54,8 +54,8 @@ git push -u origin main
      - `VITE_SUPABASE_URL`: *(Your Supabase Project URL)*
      - `VITE_SUPABASE_ANON_KEY`: *(Your Supabase Anon / Public Key)*
 5. **Deploy**:
-   - Click **"Deploy site"** (or **"Deploy stock-market-calci"**).
-   - Netlify will build and deploy the app in ~30 seconds and provide your live URL.
+   - Click **"Deploy site"** (or **"Deploy predifolio"**).
+   - Netlify will build and deploy the app in ~30 seconds and provide your live URL: [https://predifolio.netlify.app](https://predifolio.netlify.app).
 6. **Automatic Updates**:
    - Any new `git push` to your GitHub `main` branch will automatically trigger a new deployment on Netlify!
 

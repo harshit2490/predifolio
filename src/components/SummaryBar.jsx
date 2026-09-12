@@ -1,4 +1,5 @@
 import { FiDollarSign, FiBriefcase, FiTrendingUp } from 'react-icons/fi';
+import { getPredictionsFromStock } from '../utils/predictionUtils';
 import '../styles/dashboard.css';
 
 function SummaryBar({ stocks }) {
@@ -22,19 +23,22 @@ function SummaryBar({ stocks }) {
           : 0;
 
     let targetPrice = null;
-    if (Array.isArray(s.sell_predictions) && s.sell_predictions.length > 0) {
-      const first = s.sell_predictions[0];
-      targetPrice =
-        typeof first === 'object' && first !== null
-          ? Number(first.price)
-          : Number(first);
-    } else if (s.sell_prediction_price && Number(s.sell_prediction_price) > 0) {
-      targetPrice = Number(s.sell_prediction_price);
+    let targetStocks = qty;
+    const preds = getPredictionsFromStock(s, qty);
+
+    if (preds.length > 0) {
+      const first = preds[0];
+      targetPrice = Number(first.price);
+      if (first.stocks != null && Number(first.stocks) > 0) {
+        targetStocks = Number(first.stocks);
+      }
     }
 
     if (targetPrice && targetPrice > 0 && qty > 0) {
       hasPredictions = true;
-      totalPortfolioValue += targetPrice * qty;
+      const targetShares = Math.min(qty, targetStocks);
+      const remainingShares = Math.max(0, qty - targetStocks);
+      totalPortfolioValue += targetPrice * targetShares + remainingShares * buyPrice;
     } else {
       totalPortfolioValue += invested;
     }

@@ -1,12 +1,14 @@
-# 📈 Stock Market Portfolio Calculator & Tracker
+# 📈 PrediFolio — Stock Portfolio & Sell Prediction Tracker
 
 [![React](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
 [![Vite](https://img.shields.io/badge/Vite-5-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
 [![Supabase](https://img.shields.io/badge/Supabase-Database-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com/)
-[![Netlify](https://img.shields.io/badge/Netlify-Deployed-00C7B7?style=for-the-badge&logo=netlify&logoColor=white)](https://www.netlify.com/)
+[![Netlify](https://img.shields.io/badge/Netlify-Live_Demo-00C7B7?style=for-the-badge&logo=netlify&logoColor=white)](https://predifolio.netlify.app)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
 
-A modern, high-performance, and responsive **Stock Market Portfolio Calculator & Tracker** built for Indian equities (NSE/BSE). Track investments, fetch live market prices, plan multiple sell target predictions, and intuitively organize your portfolio with drag-and-drop card reordering.
+> 🚀 **Live Demo:** [https://predifolio.netlify.app](https://predifolio.netlify.app)
+
+**PrediFolio** is a modern, high-performance, and responsive stock market portfolio tracker and sell target forecaster built for Indian equities (NSE/BSE). Track investments, fetch live market prices, plan multiple sell target predictions with custom stock quantities, and intuitively organize your portfolio with drag-and-drop card reordering.
 
 ---
 
@@ -37,6 +39,117 @@ A modern, high-performance, and responsive **Stock Market Portfolio Calculator &
 - **Dark & Light Modes**: High-contrast, meticulously tailored color palettes for both dark and light modes.
 - **Micro-Animations**: Smooth hover transitions, interactive modal overlays, and haptic feedback.
 - **CSV Portfolio Export**: Export your complete portfolio, targets, and notes into an Excel/CSV spreadsheet with one click.
+
+---
+
+## 🏗️ Project Architecture
+
+```mermaid
+graph TD
+    subgraph Client["Frontend Layer (React 18 + Vite)"]
+        UI["UI Components & Modals"]
+        AuthCtx["Auth Context (Session & Roles)"]
+        ThemeMgr["Theme Manager (Light / Dark)"]
+        DnDEngine["Card Reorder Engine (Handle + 2.5s Lock)"]
+    end
+
+    subgraph Logic["Business & Utilities Layer"]
+        PredEngine["Prediction Engine (predictionUtils.js)"]
+        PriceSvc["Live Price Service (stockPriceService.js)"]
+        DateSvc["Market Hours Clock (dateUtils.js)"]
+        LocalCache["Browser Cache (Order & Offline Backup)"]
+    end
+
+    subgraph Backend["Cloud & Database (Supabase)"]
+        Postgres[("PostgreSQL Database")]
+        RLS["Row Level Security (RLS)"]
+        UsersTable["app_users (Auth & Profiles)"]
+        StocksTable["stocks (Portfolios & Targets)"]
+    end
+
+    subgraph External["External Services"]
+        Screener["Screener.in (Live Prices & Autocomplete)"]
+        Netlify["Netlify CI/CD (Production Hosting)"]
+    end
+
+    UI --> AuthCtx
+    UI --> Logic
+    Logic --> LocalCache
+    Logic --> Backend
+    PriceSvc --> Screener
+    Backend --> Postgres
+    Postgres --> UsersTable
+    Postgres --> StocksTable
+    Postgres --> RLS
+    Client -. Hosted on .-> Netlify
+```
+
+### Architectural Highlights
+
+1. **Component Hierarchy & Separation of Concerns**:
+   - `App.jsx` acts as the root guard, displaying `<Login />` for unauthenticated visitors and `<Dashboard />` for signed-in users.
+   - `<Dashboard />` maintains primary portfolio state, handling asynchronous fetches, updates, deletions, and modal visibility.
+   - Modular child components (`<Header />`, `<SummaryBar />`, `<StockList />`, `<StockCard />`) receive props and emit callbacks for clean one-way data flow.
+
+2. **Prediction & Cloud Persistence Engine**:
+   - Multi-tier resolution strategy implemented in `predictionUtils.js`:
+     1. Direct `sell_predictions` JSONB column in Supabase PostgreSQL (primary).
+     2. Serialized `pred_json` payload stored in PostgreSQL `tags` column (cloud fallback ensuring instant persistence).
+     3. Client-side `localStorage` cache for offline resilience.
+     4. Legacy `sell_prediction_price` fallback.
+
+3. **Multi-Tenant User Isolation**:
+   - Portfolios are strictly partitioned by `user_id` in database queries and Row Level Security (RLS).
+   - Card drag-and-drop ordering is persisted independently per user via localized storage keys (`stock_card_order_${user_id}`).
+
+4. **Real-Time Market Status Engine**:
+   - Indian Equity Market (NSE/BSE) operating clock validator (`dateUtils.js`) tracks trading hours (**Mon–Fri, 9:15 AM – 3:30 PM IST**).
+   - Renders animated pulsating status indicators (`LIVE` vs `CLOSED`) with informational tooltips.
+
+---
+
+### 📂 Codebase Directory Structure
+
+```text
+stock-market-calci/
+├── public/                    # Static favicon and public assets
+├── src/
+│   ├── components/            # UI components and feature modals
+│   │   ├── Header.jsx         # App navigation, logo, and user profile pill
+│   │   ├── Dashboard.jsx      # Core dashboard layout and stock state sync
+│   │   ├── SummaryBar.jsx     # Valuation metrics and projected P/L calculations
+│   │   ├── StockList.jsx      # Stock filters, sorting, and drag-and-drop container
+│   │   ├── StockCard.jsx      # Stock card, live price banner, predictions & qty
+│   │   ├── StockSearch.jsx    # Debounced company search via Screener autocomplete
+│   │   ├── ExportButton.jsx   # CSV spreadsheet exporter
+│   │   ├── Login.jsx          # Login/Signup forms with toggleable theme
+│   │   ├── ProfileModal.jsx   # Account settings and password change modal
+│   │   ├── AddStockModal.jsx  # New investment creation modal
+│   │   ├── EditStockModal.jsx # Stock details edit modal
+│   │   └── DeleteStockModal.jsx # Delete confirmation alert dialog
+│   ├── context/
+│   │   └── AuthContext.jsx    # Session management, persistence, and role state
+│   ├── utils/
+│   │   ├── predictionUtils.js # Target predictions extractor & cloud fallback loader
+│   │   ├── stockPriceService.js# Screener API market price scraper & cache
+│   │   └── dateUtils.js       # Indian market trading hours & IST date formatter
+│   ├── styles/                # Modular CSS design system
+│   │   ├── variables.css      # Design tokens (colors, gradients, glassmorphism)
+│   │   ├── header.css         # Header and user badge styles
+│   │   ├── dashboard.css      # Summary cards, grid, and empty states
+│   │   ├── stockCard.css      # Card styles, prediction inputs, and badges
+│   │   ├── modal.css          # Modal dialogs and password visibility inputs
+│   │   └── login.css          # Auth screen, animated grid, and tabs
+│   ├── supabaseSqlQuery/
+│   │   └── schema.sql         # Supabase PostgreSQL schema, RLS, and migrations
+│   ├── supabaseClient.js      # Supabase JS client configuration
+│   ├── App.jsx                # Application root with authentication routing
+│   └── main.jsx               # React DOM entry point
+├── index.html                 # HTML5 document template & SEO metadata
+├── netlify.toml               # Netlify SPA redirect rules & build commands
+├── package.json               # Dependencies and scripts
+└── README.md                  # Project documentation
+```
 
 ---
 

@@ -20,7 +20,7 @@ function Header() {
             <FiTrendingUp />
           </div>
           <h1 className="header-title">
-            Stock <span>Calculator</span>
+            Predi<span>Folio</span>
           </h1>
         </div>
 

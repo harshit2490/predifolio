@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { FiSearch, FiPlus } from 'react-icons/fi';
 import StockCard from './StockCard';
 import ExportButton from './ExportButton';
+import { getPrimaryPredictionPrice } from '../utils/predictionUtils';
 import toast from 'react-hot-toast';
 import '../styles/dashboard.css';
 
@@ -36,15 +37,6 @@ function StockList({ stocks, onEdit, onDelete, onUpdate, onReorder, onOpenAdd })
   const filtered = stocks.filter((s) =>
     s.stock_name.toLowerCase().includes(search.toLowerCase())
   );
-
-  // Helper to extract primary prediction price
-  const getPrimaryPredictionPrice = (stock) => {
-    if (Array.isArray(stock.sell_predictions) && stock.sell_predictions.length > 0) {
-      const p = stock.sell_predictions[0];
-      return typeof p === 'object' && p !== null ? Number(p.price) : Number(p);
-    }
-    return stock.sell_prediction_price ? Number(stock.sell_prediction_price) : null;
-  };
 
   // Sort stocks
   const sorted = [...filtered].sort((a, b) => {

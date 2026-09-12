@@ -15,12 +15,23 @@ import {
 import { supabase } from '../supabaseClient';
 import { formatDateDisplay, isIndianMarketOpen } from '../utils/dateUtils';
 import { fetchStockCurrentPrice } from '../utils/stockPriceService';
+import { getPredictionsFromStock } from '../utils/predictionUtils';
 import toast from 'react-hot-toast';
 import DeleteStockModal from './DeleteStockModal';
 import '../styles/stockCard.css';
 
 function StockCard({ stock, onEdit, onDelete, onUpdate, onDragHandleClick }) {
+  const buyPrice = Number(stock.buy_price) || 0;
+  const investedAmount = Number(stock.invested_amount) || 0;
+  const qty =
+    stock.buy_stocks != null
+      ? Number(stock.buy_stocks)
+      : buyPrice > 0
+        ? Math.round(investedAmount / buyPrice)
+        : 0;
+
   const [newTargetPrice, setNewTargetPrice] = useState('');
+  const [newTargetStocks, setNewTargetStocks] = useState(() => (qty > 0 ? String(qty) : ''));
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [isMarketOpen, setIsMarketOpen] = useState(() => isIndianMarketOpen());
@@ -33,31 +44,20 @@ function StockCard({ stock, onEdit, onDelete, onUpdate, onDragHandleClick }) {
     return () => clearInterval(timer);
   }, []);
 
-  // Initialize predictions from DB array, localStorage, or existing single prediction
-  const [predictions, setPredictions] = useState(() => {
-    if (Array.isArray(stock.sell_predictions) && stock.sell_predictions.length > 0) {
-      return stock.sell_predictions.map((p, idx) =>
-        typeof p === 'object' && p !== null
-          ? p
-          : { id: `pred-${idx}-${Date.now()}`, price: Number(p) }
-      );
+  // Update prefilled target stocks when stock or qty updates
+  useEffect(() => {
+    if (qty > 0) {
+      setNewTargetStocks(String(qty));
     }
-    try {
-      const cached = localStorage.getItem(`stock_predictions_${stock.id}`);
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed;
-        }
-      }
-    } catch {
-      // Ignore parse error
-    }
-    if (stock.sell_prediction_price && Number(stock.sell_prediction_price) > 0) {
-      return [{ id: `pred-init-${stock.id}`, price: Number(stock.sell_prediction_price) }];
-    }
-    return [];
-  });
+  }, [stock.id, qty]);
+
+  // Initialize predictions from DB array, Supabase tags fallback, localStorage, or existing single prediction
+  const [predictions, setPredictions] = useState(() => getPredictionsFromStock(stock, qty));
+
+  // Reload predictions if stock switches
+  useEffect(() => {
+    setPredictions(getPredictionsFromStock(stock, qty));
+  }, [stock.id]);
 
   // State for live stock price from Screener
   const [livePriceData, setLivePriceData] = useState({
@@ -102,14 +102,7 @@ function StockCard({ stock, onEdit, onDelete, onUpdate, onDragHandleClick }) {
     loadLivePrice(false);
   }, [stock.stock_name]);
 
-  const buyPrice = Number(stock.buy_price) || 0;
-  const investedAmount = Number(stock.invested_amount) || 0;
-  const qty =
-    stock.buy_stocks != null
-      ? Number(stock.buy_stocks)
-      : buyPrice > 0
-        ? Math.round(investedAmount / buyPrice)
-        : 0;
+  // buyPrice, investedAmount, qty computed at top of component
 
   // Live price calculations
   const livePrice = livePriceData.price;
@@ -141,29 +134,48 @@ function StockCard({ stock, onEdit, onDelete, onUpdate, onDragHandleClick }) {
     const primaryPrice =
       updatedPredictions.length > 0 ? Number(updatedPredictions[0].price) : null;
 
+    // Filter existing tags to preserve any other tags, updating or appending pred_json
+    const existingTags = Array.isArray(stock.tags)
+      ? stock.tags.filter((t) => typeof t !== 'string' || !t.startsWith('pred_json:'))
+      : [];
+    const updatedTags = [
+      ...existingTags,
+      'pred_json:' + JSON.stringify(updatedPredictions),
+    ];
+
     // 2. Persist to Supabase
     try {
+      // Try updating sell_predictions column first (if schema migration was run)
       const { error } = await supabase
         .from('stocks')
         .update({
           sell_predictions: updatedPredictions,
           sell_prediction_price: primaryPrice,
+          tags: updatedTags,
           updated_at: new Date().toISOString(),
         })
         .eq('id', stock.id);
 
       if (error) {
-        // If column 'sell_predictions' does not exist yet, fallback to update sell_prediction_price
-        await supabase
+        console.warn('sell_predictions column missing in Supabase, saving via tags and sell_prediction_price fallback:', error.message);
+        // Fallback update without sell_predictions column
+        const fallbackRes = await supabase
           .from('stocks')
           .update({
             sell_prediction_price: primaryPrice,
+            tags: updatedTags,
             updated_at: new Date().toISOString(),
           })
           .eq('id', stock.id);
+
+        if (fallbackRes.error) {
+          console.error('Failed to sync predictions to Supabase:', fallbackRes.error);
+          toast.error('Could not save targets to database: ' + fallbackRes.error.message);
+        }
       }
-    } catch {
-      // Silently handle network/db error
+    } catch (err) {
+      console.error('Network error syncing predictions:', err);
+      toast.error('Network error saving targets to database');
     }
 
     // 3. Notify parent dashboard
@@ -172,6 +184,7 @@ function StockCard({ stock, onEdit, onDelete, onUpdate, onDragHandleClick }) {
         ...stock,
         sell_predictions: updatedPredictions,
         sell_prediction_price: primaryPrice,
+        tags: updatedTags,
       });
     }
   };
@@ -184,6 +197,12 @@ function StockCard({ stock, onEdit, onDelete, onUpdate, onDragHandleClick }) {
       return;
     }
 
+    const stocksNum = newTargetStocks ? Number(newTargetStocks) : qty;
+    if (isNaN(stocksNum) || stocksNum <= 0) {
+      toast.error('Please enter a valid number of stocks');
+      return;
+    }
+
     // Check duplicate
     if (predictions.some((p) => Number(p.price) === priceNum)) {
       toast.error(`Target ₹${priceNum} is already added`);
@@ -193,14 +212,16 @@ function StockCard({ stock, onEdit, onDelete, onUpdate, onDragHandleClick }) {
     const newPred = {
       id: `pred-${Date.now()}`,
       price: priceNum,
+      stocks: stocksNum,
       created_at: new Date().toISOString(),
     };
 
     const updated = [...predictions, newPred];
     setPredictions(updated);
     setNewTargetPrice('');
+    setNewTargetStocks(qty > 0 ? String(qty) : '');
     syncPredictions(updated);
-    toast.success(`Target ₹${priceNum} added!`);
+    toast.success(`Target ₹${priceNum} (${stocksNum} stocks) added!`);
   };
 
   const handleDeletePrediction = (predId) => {
@@ -210,6 +231,7 @@ function StockCard({ stock, onEdit, onDelete, onUpdate, onDragHandleClick }) {
     if (editingTargetId === predId) {
       setEditingTargetId(null);
       setEditTargetPrice('');
+      setEditTargetStocks('');
     }
     toast.success('Prediction deleted');
   };
@@ -217,21 +239,32 @@ function StockCard({ stock, onEdit, onDelete, onUpdate, onDragHandleClick }) {
   // State and handlers for editing individual targets
   const [editingTargetId, setEditingTargetId] = useState(null);
   const [editTargetPrice, setEditTargetPrice] = useState('');
+  const [editTargetStocks, setEditTargetStocks] = useState('');
 
   const handleStartEditTarget = (target) => {
     setEditingTargetId(target.id);
     setEditTargetPrice(target.price.toString());
+    const tStocks =
+      target.stocks != null && Number(target.stocks) > 0 ? target.stocks : qty;
+    setEditTargetStocks(tStocks > 0 ? tStocks.toString() : '');
   };
 
   const handleCancelEditTarget = () => {
     setEditingTargetId(null);
     setEditTargetPrice('');
+    setEditTargetStocks('');
   };
 
   const handleSaveEditTarget = (targetId) => {
     const priceNum = Number(editTargetPrice);
     if (!editTargetPrice || isNaN(priceNum) || priceNum <= 0) {
       toast.error('Please enter a valid target sell price');
+      return;
+    }
+
+    const stocksNum = editTargetStocks ? Number(editTargetStocks) : qty;
+    if (isNaN(stocksNum) || stocksNum <= 0) {
+      toast.error('Please enter a valid number of stocks');
       return;
     }
 
@@ -247,14 +280,20 @@ function StockCard({ stock, onEdit, onDelete, onUpdate, onDragHandleClick }) {
 
     const updated = predictions.map((p) =>
       p.id === targetId
-        ? { ...p, price: priceNum, updated_at: new Date().toISOString() }
+        ? {
+            ...p,
+            price: priceNum,
+            stocks: stocksNum,
+            updated_at: new Date().toISOString(),
+          }
         : p
     );
     setPredictions(updated);
     syncPredictions(updated);
     setEditingTargetId(null);
     setEditTargetPrice('');
-    toast.success(`Target updated to ₹${priceNum}!`);
+    setEditTargetStocks('');
+    toast.success(`Target updated to ₹${priceNum} (${stocksNum} stocks)!`);
   };
 
   const handleDeleteStock = async () => {
@@ -423,7 +462,7 @@ function StockCard({ stock, onEdit, onDelete, onUpdate, onDragHandleClick }) {
 
         {/* Add Prediction Input Form */}
         <form className="prediction-add-bar" onSubmit={handleAddPrediction}>
-          <div className="prediction-input-wrapper">
+          <div className="prediction-input-wrapper price-input-wrap">
             <span className="prediction-currency-prefix">₹</span>
             <input
               className="prediction-add-input"
@@ -432,13 +471,32 @@ function StockCard({ stock, onEdit, onDelete, onUpdate, onDragHandleClick }) {
               min="0"
               value={newTargetPrice}
               onChange={(e) => setNewTargetPrice(e.target.value)}
-              placeholder="Target sell price (e.g. 180)"
+              placeholder="Sell price"
+              title="Target sell price per stock (₹)"
+            />
+          </div>
+          <div className="prediction-input-wrapper stocks-input-wrap">
+            <span className="prediction-qty-prefix">Qty</span>
+            <input
+              className="prediction-add-input qty-input"
+              type="number"
+              step="1"
+              min="1"
+              value={newTargetStocks}
+              onChange={(e) => setNewTargetStocks(e.target.value)}
+              placeholder="Stocks"
+              title={`Number of stocks to sell (Default: bought ${qty})`}
             />
           </div>
           <button
             type="submit"
             className="prediction-add-btn"
-            disabled={!newTargetPrice || Number(newTargetPrice) <= 0}
+            disabled={
+              !newTargetPrice ||
+              Number(newTargetPrice) <= 0 ||
+              !newTargetStocks ||
+              Number(newTargetStocks) <= 0
+            }
           >
             <FiPlus />
             <span>Add</span>
@@ -451,11 +509,13 @@ function StockCard({ stock, onEdit, onDelete, onUpdate, onDragHandleClick }) {
             predictions.map((p, idx) => {
               const isEditing = editingTargetId === p.id;
               const targetPrice = Number(p.price);
+              const targetStocks =
+                p.stocks != null && Number(p.stocks) > 0 ? Number(p.stocks) : qty;
               const diff = targetPrice - buyPrice;
               const percent = buyPrice > 0 ? (diff / buyPrice) * 100 : 0;
-              const plAmount = diff * qty;
+              const plAmount = diff * targetStocks;
               const isProfit = plAmount >= 0;
-              const projectedVal = targetPrice * qty;
+              const projectedVal = targetPrice * targetStocks;
 
               return (
                 <div
@@ -484,7 +544,22 @@ function StockCard({ stock, onEdit, onDelete, onUpdate, onDragHandleClick }) {
                             onChange={(e) => setEditTargetPrice(e.target.value)}
                             className="prediction-edit-input"
                             autoFocus
-                            placeholder="New target..."
+                            placeholder="Price..."
+                            onKeyDown={(e) => {
+                              if (e.key === 'Escape') handleCancelEditTarget();
+                            }}
+                          />
+                        </div>
+                        <div className="prediction-edit-input-wrap qty-wrap">
+                          <span className="prediction-edit-currency qty-label">Qty</span>
+                          <input
+                            type="number"
+                            step="1"
+                            min="1"
+                            value={editTargetStocks}
+                            onChange={(e) => setEditTargetStocks(e.target.value)}
+                            className="prediction-edit-input qty-input"
+                            placeholder="Stocks..."
                             onKeyDown={(e) => {
                               if (e.key === 'Escape') handleCancelEditTarget();
                             }}
@@ -494,7 +569,12 @@ function StockCard({ stock, onEdit, onDelete, onUpdate, onDragHandleClick }) {
                           type="submit"
                           className="prediction-save-btn"
                           title="Save target"
-                          disabled={!editTargetPrice || Number(editTargetPrice) <= 0}
+                          disabled={
+                            !editTargetPrice ||
+                            Number(editTargetPrice) <= 0 ||
+                            !editTargetStocks ||
+                            Number(editTargetStocks) <= 0
+                          }
                         >
                           <FiCheck />
                         </button>
@@ -513,6 +593,12 @@ function StockCard({ stock, onEdit, onDelete, onUpdate, onDragHandleClick }) {
                       <div className="prediction-item-left">
                         <div className="prediction-target-meta">
                           <span className="prediction-target-tag">Target {idx + 1}</span>
+                          <span
+                            className="prediction-qty-badge"
+                            title={`${targetStocks} stocks for this target`}
+                          >
+                            {targetStocks} {targetStocks === 1 ? 'stock' : 'stocks'}
+                          </span>
                           <span className={`prediction-pill ${isProfit ? 'profit' : 'loss'}`}>
                             {isProfit ? <FiTrendingUp /> : <FiTrendingDown />}
                             {isProfit ? '+' : ''}{percent.toFixed(2)}%
@@ -536,7 +622,7 @@ function StockCard({ stock, onEdit, onDelete, onUpdate, onDragHandleClick }) {
                           type="button"
                           className="prediction-item-action-btn edit"
                           onClick={() => handleStartEditTarget(p)}
-                          title="Edit target price"
+                          title="Edit target price and stocks"
                           aria-label="Edit target"
                         >
                           <FiEdit2 />
@@ -559,7 +645,7 @@ function StockCard({ stock, onEdit, onDelete, onUpdate, onDragHandleClick }) {
           ) : (
             <div className="prediction-empty-state">
               <span className="prediction-empty-hint">
-                No sell predictions yet. Enter a target price above to calculate projected profit/loss!
+                No sell predictions yet. Enter a target price and stocks above to calculate projected profit/loss!
               </span>
             </div>
           )}

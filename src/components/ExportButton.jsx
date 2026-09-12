@@ -1,5 +1,6 @@
 import { FiDownload } from 'react-icons/fi';
 import { getTodayZonalDate } from '../utils/dateUtils';
+import { getPredictionsFromStock } from '../utils/predictionUtils';
 
 function ExportButton({ stocks }) {
   const handleExport = () => {
@@ -27,23 +28,33 @@ function ExportButton({ stocks }) {
             ? Math.round(invested / buyPrice)
             : 0;
 
-      // Extract all prediction prices
+      // Extract all prediction prices and quantities
+      const predsList = getPredictionsFromStock(s, qty);
       let preds = [];
-      if (Array.isArray(s.sell_predictions) && s.sell_predictions.length > 0) {
-        preds = s.sell_predictions.map((p) =>
-          typeof p === 'object' && p !== null ? Number(p.price) : Number(p)
-        );
-      } else if (s.sell_prediction_price && Number(s.sell_prediction_price) > 0) {
-        preds = [Number(s.sell_prediction_price)];
+      let primaryTarget = null;
+      let primaryTargetStocks = qty;
+
+      if (predsList.length > 0) {
+        preds = predsList.map((p) => {
+          const pPrice = Number(p.price);
+          const pStocks =
+            p.stocks != null && Number(p.stocks) > 0 ? ` (${p.stocks} stocks)` : '';
+          return `₹${pPrice}${pStocks}`;
+        });
+
+        const first = predsList[0];
+        primaryTarget = Number(first.price);
+        if (first.stocks != null && Number(first.stocks) > 0) {
+          primaryTargetStocks = Number(first.stocks);
+        }
       }
 
       let plPercent = '';
       let plAmount = '';
 
-      if (preds.length > 0 && buyPrice > 0) {
-        const primaryTarget = preds[0];
+      if (primaryTarget != null && primaryTarget > 0 && buyPrice > 0) {
         const pct = ((primaryTarget - buyPrice) / buyPrice) * 100;
-        const amt = (primaryTarget - buyPrice) * qty;
+        const amt = (primaryTarget - buyPrice) * primaryTargetStocks;
         plPercent = (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%';
         plAmount = (amt >= 0 ? '+' : '') + amt.toFixed(2);
       }

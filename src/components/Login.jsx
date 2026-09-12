@@ -97,7 +97,7 @@ function Login() {
           setError(result.error);
           triggerShake();
         } else {
-          toast.success(`Welcome to Stock Calculator, ${name}!`);
+          toast.success(`Welcome to PrediFolio, ${name}!`);
         }
       } finally {
         setLoading(false);
@@ -147,12 +147,12 @@ function Login() {
         </div>
 
         <h1 className="login-title">
-          Stock<span className="gradient-text"> Calculator</span>
+          Predi<span className="gradient-text">Folio</span>
         </h1>
         <p className="login-subtitle">
           {isSignUp
-            ? 'Create an account to start tracking'
-            : 'Track your investments & predict profits'}
+            ? 'Create an account to start forecasting profits'
+            : 'Track investments & forecast sell targets'}
         </p>
 
         {/* Auth Tabs */}

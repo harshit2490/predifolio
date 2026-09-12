@@ -566,6 +566,14 @@
   flex: 1;
 }
 
+.price-input-wrap {
+  flex: 1.25;
+}
+
+.stocks-input-wrap {
+  flex: 1;
+}
+
 .prediction-currency-prefix {
   position: absolute;
   left: 12px;
@@ -575,6 +583,27 @@
   font-size: 0.9rem;
   font-weight: 700;
   pointer-events: none;
+}
+
+.prediction-qty-prefix {
+  position: absolute;
+  left: 9px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  font-weight: 700;
+  pointer-events: none;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: var(--bg-card);
+  padding: 1px 4px;
+  border-radius: 4px;
+  border: 1px solid var(--border-card);
+}
+
+.prediction-add-input.qty-input {
+  padding-left: 44px;
 }
 
 .prediction-add-input {
@@ -694,6 +723,29 @@
   color: #e2e8f0;
 }
 
+.prediction-qty-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 1px 7px;
+  border-radius: 8px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+}
+
+[data-theme="light"] .prediction-qty-badge {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+}
+
+[data-theme="dark"] .prediction-qty-badge {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #94a3b8;
+}
+
 .prediction-pill {
   display: inline-flex;
   align-items: center;
@@ -785,7 +837,11 @@
 
 .prediction-edit-input-wrap {
   position: relative;
-  flex: 1;
+  flex: 1.1;
+}
+
+.prediction-edit-input-wrap.qty-wrap {
+  flex: 0.9;
 }
 
 .prediction-edit-currency {
@@ -797,6 +853,22 @@
   font-size: 0.85rem;
   font-weight: 700;
   pointer-events: none;
+}
+
+.prediction-edit-currency.qty-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  left: 7px;
+  background: var(--bg-card);
+  padding: 1px 3px;
+  border-radius: 4px;
+  border: 1px solid var(--border-card);
+}
+
+.prediction-edit-input.qty-input {
+  padding-left: 36px;
 }
 
 .prediction-edit-input {
@@ -1022,5 +1094,24 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 4px;
+  }
+
+  .prediction-add-bar {
+    flex-wrap: wrap;
+  }
+
+  .price-input-wrap,
+  .stocks-input-wrap {
+    flex: 1 1 calc(50% - 4px);
+    min-width: 110px;
+  }
+
+  .prediction-add-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .prediction-edit-controls {
+    flex-wrap: wrap;
   }
 }
