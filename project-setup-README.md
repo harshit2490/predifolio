@@ -78,18 +78,81 @@ git push -u origin main
 
 ---
 
-## 4. Complete Supabase SQL Schema Query
+## 4. Supabase SQL Schema & Multi-User Setup
 
+### A. Quick Migration (If you already created the tables earlier)
+If you already ran the previous schema in Supabase and want to activate separate dashboards for each user while keeping existing stocks under the admin account, run this in Supabase **SQL Editor**:
+
+```sql
+-- 1. Add user_id column with foreign key to app_users
+ALTER TABLE stocks ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES app_users(id) ON DELETE CASCADE;
+
+-- 2. Add index for fast per-user filtering
+CREATE INDEX IF NOT EXISTS idx_stocks_user_id ON stocks(user_id);
+
+-- 3. Link all existing stock cards to the admin user
+UPDATE stocks 
+SET user_id = (SELECT id FROM app_users WHERE username = 'admin' LIMIT 1) 
+WHERE user_id IS NULL;
+```
+
+---
+
+### B. Complete Full SQL Schema (For fresh database setups)
 In your Supabase Dashboard, go to **SQL Editor** $\rightarrow$ click **"New query"**, paste the complete SQL script below, and click **"Run"**:
 
 ```sql
 -- ==========================================================
 -- Supabase Database Schema for Stock Market Calculator
+-- File: src/supabaseSqlQuery/schema.sql
 -- ==========================================================
 
--- 1. Create stocks table (if not exists)
+-- 1. User Authentication Table (app_users)
+CREATE TABLE IF NOT EXISTS app_users (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  name TEXT,
+  username TEXT UNIQUE NOT NULL,
+  email TEXT UNIQUE,
+  password TEXT NOT NULL,
+  role TEXT DEFAULT 'user',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Ensure columns and indexes exist if table was created earlier
+ALTER TABLE app_users ADD COLUMN IF NOT EXISTS name TEXT;
+ALTER TABLE app_users ADD COLUMN IF NOT EXISTS email TEXT;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_app_users_email ON app_users(lower(email)) WHERE email IS NOT NULL;
+
+-- Enable Row Level Security (RLS) on app_users
+ALTER TABLE app_users ENABLE ROW LEVEL SECURITY;
+
+-- Policy: Allow reading user for login verification
+DROP POLICY IF EXISTS "Allow public select for login" ON app_users;
+CREATE POLICY "Allow public select for login" ON app_users
+  FOR SELECT
+  USING (true);
+
+-- Policy: Allow all operations (insert for signup, update for profile, delete)
+DROP POLICY IF EXISTS "Allow all operations on app_users" ON app_users;
+CREATE POLICY "Allow all operations on app_users" ON app_users
+  FOR ALL
+  USING (true)
+  WITH CHECK (true);
+
+-- Insert or update default admin account
+INSERT INTO app_users (name, username, email, password, role)
+VALUES ('Harshit', 'admin', 'admin@stockcalci.com', 'Harshit2490@', 'admin')
+ON CONFLICT (username) DO UPDATE
+SET name = COALESCE(app_users.name, EXCLUDED.name),
+    email = COALESCE(app_users.email, EXCLUDED.email);
+
+-- ==========================================================
+-- 2. Stocks Table (User-isolated Portfolios)
+-- ==========================================================
 CREATE TABLE IF NOT EXISTS stocks (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES app_users(id) ON DELETE CASCADE,
   stock_name TEXT NOT NULL,
   buy_date DATE NOT NULL DEFAULT CURRENT_DATE,
   buy_price NUMERIC(12,4) NOT NULL,
@@ -102,56 +165,28 @@ CREATE TABLE IF NOT EXISTS stocks (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 2. If table was already created earlier, ensure sell_predictions column exists
+-- Ensure user_id and sell_predictions columns exist if table was created earlier
+ALTER TABLE stocks ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES app_users(id) ON DELETE CASCADE;
 ALTER TABLE stocks ADD COLUMN IF NOT EXISTS sell_predictions JSONB DEFAULT '[]'::jsonb;
 
--- 3. Enable Row Level Security (RLS) - required by Supabase
+-- Assign any existing unassigned stocks to the admin user
+UPDATE stocks
+SET user_id = (SELECT id FROM app_users WHERE username = 'admin' LIMIT 1)
+WHERE user_id IS NULL;
+
+-- Enable Row Level Security (RLS) on stocks
 ALTER TABLE stocks ENABLE ROW LEVEL SECURITY;
 
--- 4. Create Policy: Allow all operations (Insert, Select, Update, Delete)
--- Drop existing policy first if re-running to avoid duplicate policy error
+-- Policy: Allow all operations (Insert, Select, Update, Delete)
 DROP POLICY IF EXISTS "Allow all operations" ON stocks;
-
 CREATE POLICY "Allow all operations" ON stocks
   FOR ALL
   USING (true)
   WITH CHECK (true);
 
--- 5. Indexes for fast querying and sorting
+-- Indexes for fast querying, user-filtering, and sorting
+CREATE INDEX IF NOT EXISTS idx_stocks_user_id ON stocks(user_id);
 CREATE INDEX IF NOT EXISTS idx_stocks_created_at ON stocks(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_stocks_buy_date ON stocks(buy_date DESC);
 CREATE INDEX IF NOT EXISTS idx_stocks_name ON stocks(stock_name);
-
--- ==========================================================
--- 6. User Authentication Table (app_users)
--- ==========================================================
-CREATE TABLE IF NOT EXISTS app_users (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  username TEXT UNIQUE NOT NULL,
-  password TEXT NOT NULL,
-  role TEXT DEFAULT 'admin',
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Enable Row Level Security (RLS)
-ALTER TABLE app_users ENABLE ROW LEVEL SECURITY;
-
--- Policy: Allow reading user for login verification
-DROP POLICY IF EXISTS "Allow public select for login" ON app_users;
-CREATE POLICY "Allow public select for login" ON app_users
-  FOR SELECT
-  USING (true);
-
--- Policy: Allow all operations (insert, update, delete)
-DROP POLICY IF EXISTS "Allow all operations on app_users" ON app_users;
-CREATE POLICY "Allow all operations on app_users" ON app_users
-  FOR ALL
-  USING (true)
-  WITH CHECK (true);
-
--- Insert default admin account (will not overwrite if already exists)
-INSERT INTO app_users (username, password, role)
-VALUES ('admin', 'Harshit2490@', 'admin')
-ON CONFLICT (username) DO NOTHING;
 ```

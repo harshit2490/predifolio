@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
+import { useAuth } from '../context/AuthContext';
 import Header from './Header';
 import SummaryBar from './SummaryBar';
 import StockList from './StockList';
@@ -9,29 +10,68 @@ import toast from 'react-hot-toast';
 import '../styles/dashboard.css';
 
 function Dashboard() {
+  const { currentUser } = useAuth();
   const [stocks, setStocks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingStock, setEditingStock] = useState(null);
 
-  // Fetch stocks on mount
+  // Fetch stocks when user changes or on mount
   useEffect(() => {
     fetchStocks();
-  }, []);
+  }, [currentUser?.id]);
 
   const fetchStocks = async () => {
+    if (!currentUser?.id) {
+      setStocks([]);
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('stocks')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      // Admin sees their stocks + unassigned legacy stocks (where user_id IS NULL)
+      // Non-admin / newly signed up users strictly see only their own stocks
+      if (currentUser.role === 'admin') {
+        query = query.or(`user_id.eq.${currentUser.id},user_id.is.null`);
+      } else {
+        query = query.eq('user_id', currentUser.id);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        // Graceful handling if user_id column has not been created yet
+        if (error.code === '42703' || error.message?.includes('user_id')) {
+          console.warn('user_id column not found in stocks table. Please run SQL migration.');
+          if (currentUser.role === 'admin') {
+            const fallback = await supabase
+              .from('stocks')
+              .select('*')
+              .order('created_at', { ascending: false });
+            if (!fallback.error) {
+              setStocks(fallback.data || []);
+              return;
+            }
+          }
+        }
+        throw error;
+      }
+
       const fetched = data || [];
 
-      // Apply saved custom order if exists
+      // Apply saved custom order if exists for this specific user
       try {
-        const savedOrder = localStorage.getItem('stock_card_order');
+        const userOrderKey = `stock_card_order_${currentUser.id}`;
+        const savedOrder =
+          localStorage.getItem(userOrderKey) ||
+          (currentUser.role === 'admin' ? localStorage.getItem('stock_card_order') : null);
+
         if (savedOrder) {
           const orderIds = JSON.parse(savedOrder);
           if (Array.isArray(orderIds) && orderIds.length > 0) {
@@ -73,7 +113,8 @@ function Dashboard() {
     setStocks(newOrderedStocks);
     try {
       const orderIds = newOrderedStocks.map((s) => s.id);
-      localStorage.setItem('stock_card_order', JSON.stringify(orderIds));
+      const userOrderKey = currentUser?.id ? `stock_card_order_${currentUser.id}` : 'stock_card_order';
+      localStorage.setItem(userOrderKey, JSON.stringify(orderIds));
     } catch {
       // Ignore
     }

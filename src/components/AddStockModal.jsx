@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { FiX } from 'react-icons/fi';
 import { supabase } from '../supabaseClient';
+import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import StockSearch from './StockSearch';
 import { getTodayZonalDate } from '../utils/dateUtils';
 import '../styles/modal.css';
 
 function AddStockModal({ onClose, onAdd }) {
+  const { currentUser } = useAuth();
   const [formData, setFormData] = useState({
     stock_name: '',
     buy_date: getTodayZonalDate(),
@@ -47,21 +49,33 @@ function AddStockModal({ onClose, onAdd }) {
 
     setSaving(true);
     try {
+      const payload = {
+        stock_name: formData.stock_name.trim(),
+        buy_date: formData.buy_date,
+        buy_price: buyPriceNum,
+        invested_amount: calculatedInvestedAmount,
+        notes: formData.notes.trim() || null,
+      };
+
+      if (currentUser?.id) {
+        payload.user_id = currentUser.id;
+      }
+
       const { data, error } = await supabase
         .from('stocks')
-        .insert([
-          {
-            stock_name: formData.stock_name.trim(),
-            buy_date: formData.buy_date,
-            buy_price: buyPriceNum,
-            invested_amount: calculatedInvestedAmount,
-            notes: formData.notes.trim() || null,
-          },
-        ])
+        .insert([payload])
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        if (error.code === '42703' || error.message?.includes('user_id')) {
+          toast.error(
+            'Database update required: Please run the latest SQL migration in Supabase to enable user_id.',
+            { duration: 6000 }
+          );
+        }
+        throw error;
+      }
 
       toast.success(`${formData.stock_name} added!`);
       onAdd(data);

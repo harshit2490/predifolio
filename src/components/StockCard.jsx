@@ -13,14 +13,25 @@ import {
   FiMove,
 } from 'react-icons/fi';
 import { supabase } from '../supabaseClient';
-import { formatDateDisplay } from '../utils/dateUtils';
+import { formatDateDisplay, isIndianMarketOpen } from '../utils/dateUtils';
 import { fetchStockCurrentPrice } from '../utils/stockPriceService';
 import toast from 'react-hot-toast';
+import DeleteStockModal from './DeleteStockModal';
 import '../styles/stockCard.css';
 
 function StockCard({ stock, onEdit, onDelete, onUpdate, onDragHandleClick }) {
   const [newTargetPrice, setNewTargetPrice] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [isMarketOpen, setIsMarketOpen] = useState(() => isIndianMarketOpen());
+
+  // Periodically refresh market status
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setIsMarketOpen(isIndianMarketOpen());
+    }, 30000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Initialize predictions from DB array, localStorage, or existing single prediction
   const [predictions, setPredictions] = useState(() => {
@@ -247,6 +258,7 @@ function StockCard({ stock, onEdit, onDelete, onUpdate, onDragHandleClick }) {
   };
 
   const handleDeleteStock = async () => {
+    setDeleting(true);
     try {
       const { error } = await supabase
         .from('stocks')
@@ -260,9 +272,12 @@ function StockCard({ stock, onEdit, onDelete, onUpdate, onDragHandleClick }) {
         // Ignore
       }
       toast.success(`${stock.stock_name} removed`);
+      setShowDeleteConfirm(false);
       onDelete(stock.id);
     } catch (err) {
       toast.error('Failed to delete stock');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -310,11 +325,29 @@ function StockCard({ stock, onEdit, onDelete, onUpdate, onDragHandleClick }) {
 
       {/* Full-Width Live Current Value Banner */}
       <div className="stock-live-banner">
+        <div
+          className={`live-status-pill ${isMarketOpen ? 'status-live' : 'status-closed'}`}
+          title={
+            isMarketOpen
+              ? 'Market is Live. Opening time is 9:15am - 3:30pm'
+              : 'Market is Closed. Opening time is 9:15am - 3:30pm'
+          }
+          role="status"
+          aria-label={
+            isMarketOpen
+              ? 'Market is Live. Opening time is 9:15am - 3:30pm'
+              : 'Market is Closed. Opening time is 9:15am - 3:30pm'
+          }
+        >
+          <span className={`live-pulse-dot ${isMarketOpen ? 'status-live' : 'status-closed'}`}></span>
+          <span className="live-status-text">{isMarketOpen ? 'LIVE' : 'CLOSED'}</span>
+          <span className="live-status-tooltip">
+            {isMarketOpen
+              ? 'Market is Live. Opening time is 9:15am - 3:30pm'
+              : 'Market is Closed. Opening time is 9:15am - 3:30pm'}
+          </span>
+        </div>
         <div className="live-banner-left">
-          <div className="live-status-pill">
-            <span className="live-pulse-dot"></span>
-            <span className="live-status-text">LIVE</span>
-          </div>
           <div className="live-price-group">
             <span className="live-price-label">Current Value</span>
             <span className="live-price-amount">
@@ -543,23 +576,14 @@ function StockCard({ stock, onEdit, onDelete, onUpdate, onDragHandleClick }) {
         </div>
       )}
 
-      {/* Delete Confirmation */}
+      {/* Delete Confirmation Alert Modal */}
       {showDeleteConfirm && (
-        <div className="delete-confirm">
-          <span className="delete-confirm-text">Delete this stock?</span>
-          <button
-            className="delete-confirm-btn delete-confirm-no"
-            onClick={() => setShowDeleteConfirm(false)}
-          >
-            Cancel
-          </button>
-          <button
-            className="delete-confirm-btn delete-confirm-yes"
-            onClick={handleDeleteStock}
-          >
-            Delete
-          </button>
-        </div>
+        <DeleteStockModal
+          stock={stock}
+          onConfirm={handleDeleteStock}
+          onClose={() => setShowDeleteConfirm(false)}
+          deleting={deleting}
+        />
       )}
     </div>
   );
