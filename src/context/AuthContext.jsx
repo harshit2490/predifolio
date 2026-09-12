@@ -5,11 +5,16 @@ const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    return sessionStorage.getItem('stock_auth') === 'true';
+    return (
+      localStorage.getItem('stock_auth') === 'true' ||
+      sessionStorage.getItem('stock_auth') === 'true'
+    );
   });
   const [currentUser, setCurrentUser] = useState(() => {
     try {
-      const saved = sessionStorage.getItem('stock_user');
+      const saved =
+        localStorage.getItem('stock_user') ||
+        sessionStorage.getItem('stock_user');
       return saved ? JSON.parse(saved) : null;
     } catch {
       return null;
@@ -35,9 +40,11 @@ export function AuthProvider({ children }) {
         // Fallback check if user hasn't run the SQL query in Supabase yet
         if (error.code === '42P01' || error.message?.includes('does not exist')) {
           if (cleanUser === 'admin' && password === 'Harshit2490@') {
+            const adminData = { username: 'admin', role: 'admin' };
             setIsAuthenticated(true);
-            sessionStorage.setItem('stock_auth', 'true');
-            sessionStorage.setItem('stock_user', JSON.stringify({ username: 'admin', role: 'admin' }));
+            setCurrentUser(adminData);
+            localStorage.setItem('stock_auth', 'true');
+            localStorage.setItem('stock_user', JSON.stringify(adminData));
             return { success: true };
           }
           return {
@@ -51,8 +58,10 @@ export function AuthProvider({ children }) {
       if (data) {
         setIsAuthenticated(true);
         setCurrentUser(data);
-        sessionStorage.setItem('stock_auth', 'true');
-        sessionStorage.setItem('stock_user', JSON.stringify(data));
+        localStorage.setItem('stock_auth', 'true');
+        localStorage.setItem('stock_user', JSON.stringify(data));
+        sessionStorage.removeItem('stock_auth');
+        sessionStorage.removeItem('stock_user');
         return { success: true, user: data };
       }
 
@@ -65,6 +74,8 @@ export function AuthProvider({ children }) {
   const logout = () => {
     setIsAuthenticated(false);
     setCurrentUser(null);
+    localStorage.removeItem('stock_auth');
+    localStorage.removeItem('stock_user');
     sessionStorage.removeItem('stock_auth');
     sessionStorage.removeItem('stock_user');
   };
