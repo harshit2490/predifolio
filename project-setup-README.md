@@ -73,7 +73,7 @@ git push -u origin main
 5. Create or update your `.env` file in the project root:
    ```env
    VITE_SUPABASE_URL=https://your-project-ref.supabase.co
-   VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+   VITE_SUPABASE_ANON_KEY=eyJhbGciOiJI...
    ```
 
 ---
