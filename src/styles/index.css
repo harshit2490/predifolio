@@ -22,18 +22,22 @@ body {
 }
 
 /* ===== Theme Tokens — Light (Default Vestor) ===== */
+:root {
+  --header-height: 72px;
+}
+
 :root,
 [data-theme="light"] {
   --bg-primary: #F4F7F6;
   --bg-secondary: #FFFFFF;
   --bg-card: #FFFFFF;
   --bg-card-hover: #F8FAFC;
-  --bg-modal: rgba(244, 247, 246, 0.95);
-  --bg-input: rgba(13, 92, 83, 0.04);
-  --bg-input-focus: rgba(13, 92, 83, 0.08);
+  --bg-modal: #FFFFFF;
+  --bg-input: #FFFFFF;
+  --bg-input-focus: #F4F7F6;
 
   --border-card: #E5EBEA;
-  --border-input: #E5EBEA;
+  --border-input: #D1D9D8;
   --border-input-focus: #0D5C53;
 
   --text-primary: #1A2B28;
@@ -69,14 +73,14 @@ body {
 [data-theme="dark"] {
   --bg-primary: #0a0e17;
   --bg-secondary: #111827;
-  --bg-card: rgba(255, 255, 255, 0.04);
-  --bg-card-hover: rgba(255, 255, 255, 0.07);
-  --bg-modal: rgba(10, 14, 23, 0.92);
-  --bg-input: rgba(255, 255, 255, 0.06);
-  --bg-input-focus: rgba(255, 255, 255, 0.1);
+  --bg-card: #111827;
+  --bg-card-hover: #162032;
+  --bg-modal: #111827;
+  --bg-input: #162032;
+  --bg-input-focus: #1d2b45;
 
-  --border-card: rgba(255, 255, 255, 0.08);
-  --border-input: rgba(255, 255, 255, 0.12);
+  --border-card: #1f293d;
+  --border-input: #27354f;
   --border-input-focus: rgba(0, 212, 170, 0.5);
 
   --text-primary: #f8fafc;
@@ -96,9 +100,9 @@ body {
   --loss-bg: rgba(255, 82, 82, 0.1);
   --loss-border: rgba(255, 82, 82, 0.25);
 
-  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.3);
-  --shadow-card-hover: 0 8px 40px rgba(0, 212, 170, 0.12);
-  --shadow-modal: 0 24px 80px rgba(0, 0, 0, 0.6);
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.4);
+  --shadow-card-hover: 0 8px 40px rgba(0, 212, 170, 0.15);
+  --shadow-modal: 0 24px 80px rgba(0, 0, 0, 0.7);
 
   --glass-blur: blur(16px);
   --glass-saturate: saturate(1.8);
@@ -108,13 +112,45 @@ body {
   --scrollbar-thumb-hover: #4a5568;
 }
 
-/* ===== Body ===== */
+/* ===== Body & Root ===== */
 body {
   background-color: var(--bg-primary);
   color: var(--text-primary);
 }
 
-/* ===== Custom Scrollbar ===== */
+#root {
+  position: relative;
+  min-height: 100vh;
+  z-index: 0;
+  isolation: isolate;
+}
+
+/* ===== 3D Financial Background Canvas Wrapper ===== */
+.financial-bg-wrapper {
+  position: fixed;
+  left: 0;
+  right: 0;
+  width: 100vw;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+  user-select: none;
+}
+
+.financial-bg-wrapper.auth {
+  top: 0;
+  height: 100vh;
+  bottom: 0;
+}
+
+.financial-bg-wrapper.dashboard,
+.financial-bg-wrapper.dashboard-threejs-theme {
+  top: var(--header-height, 50px);
+  height: calc(100vh - var(--header-height, 50px));
+  bottom: 0;    
+}
+
+/* ===== Custom Scrollbar ===== */  
 ::-webkit-scrollbar {
   width: 6px;
 }
@@ -189,6 +225,15 @@ body {
   100% { background-position: 0% 50%; }
 }
 
+@keyframes waveSubtleBreathing {
+  0%, 100% {
+    transform: translateY(0) scaleY(1);
+  }
+  50% {
+    transform: translateY(-10px) scaleY(1.03);
+  }
+}
+
 /* ===== Tabular Numbers ===== */
 .num {
   font-variant-numeric: tabular-nums;
@@ -206,3 +251,10 @@ body {
   background: var(--accent);
   color: var(--text-inverse);
 }
+
+@media (max-width: 600px) {
+  :root {
+    --header-height: 60px;
+  }
+}
+

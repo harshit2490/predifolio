@@ -1,17 +1,20 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import Header from './Header';
 import SummaryBar from './SummaryBar';
 import StockList from './StockList';
 import AddStockModal from './AddStockModal';
 import EditStockModal from './EditStockModal';
+import FinancialBackground from './ThreeJS/FinancialBackground';
 import { getPredictionsFromStock } from '../utils/predictionUtils';
 import toast from 'react-hot-toast';
 import '../styles/dashboard.css';
 
 function Dashboard() {
   const { currentUser } = useAuth();
+  const { theme } = useTheme();
   const [stocks, setStocks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -147,7 +150,7 @@ function Dashboard() {
   return (
     <>
       <Header />
-
+      <FinancialBackground variant="dashboard-threejs-theme" theme={theme} />
       <main className="dashboard">
         {loading ? (
           <div className="empty-state">

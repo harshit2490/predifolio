@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import FinancialBackground from './ThreeJS/FinancialBackground';
 import {
   FiTrendingUp,
   FiUser,
@@ -127,6 +128,7 @@ function Login() {
 
   return (
     <div className="login-page">
+      <FinancialBackground variant="auth" theme={theme} />
       <div className="login-bg" />
       <div className="login-grid" />
 

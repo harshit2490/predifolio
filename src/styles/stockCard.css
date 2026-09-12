@@ -1,5 +1,7 @@
 /* ===== Stock Card ===== */
 .stock-card {
+  position: relative;
+  z-index: 2;
   padding: 24px;
   background: var(--bg-card);
   border: 1px solid var(--border-card);
@@ -176,8 +178,8 @@
 }
 
 [data-theme="dark"] .stock-live-banner {
-  background: rgba(255, 255, 255, 0.04);
-  border-color: rgba(255, 255, 255, 0.08);
+  background: #162032;
+  border-color: #1f293d;
 }
 
 .live-banner-left {
