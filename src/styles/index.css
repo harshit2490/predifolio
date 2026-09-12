@@ -21,30 +21,30 @@ body {
   transition: background-color 0.4s ease, color 0.4s ease;
 }
 
-/* ===== Theme Tokens — Light (Default) ===== */
+/* ===== Theme Tokens — Light (Default Vestor) ===== */
 :root,
 [data-theme="light"] {
-  --bg-primary: #f0f4f8;
-  --bg-secondary: #ffffff;
-  --bg-card: rgba(255, 255, 255, 0.75);
-  --bg-card-hover: rgba(255, 255, 255, 0.9);
-  --bg-modal: rgba(240, 244, 248, 0.95);
-  --bg-input: rgba(0, 0, 0, 0.04);
-  --bg-input-focus: rgba(0, 0, 0, 0.06);
+  --bg-primary: #F4F7F6;
+  --bg-secondary: #FFFFFF;
+  --bg-card: #FFFFFF;
+  --bg-card-hover: #F8FAFC;
+  --bg-modal: rgba(244, 247, 246, 0.95);
+  --bg-input: rgba(13, 92, 83, 0.04);
+  --bg-input-focus: rgba(13, 92, 83, 0.08);
 
-  --border-card: rgba(0, 0, 0, 0.08);
-  --border-input: rgba(0, 0, 0, 0.12);
-  --border-input-focus: rgba(8, 145, 178, 0.5);
+  --border-card: #E5EBEA;
+  --border-input: #E5EBEA;
+  --border-input-focus: #0D5C53;
 
-  --text-primary: #0f172a;
-  --text-secondary: #334155;
-  --text-muted: #475569;
-  --text-inverse: #ffffff;
+  --text-primary: #1A2B28;
+  --text-secondary: #5F7370;
+  --text-muted: #8E9E9C;
+  --text-inverse: #FFFFFF;
 
-  --accent: #0891b2;
-  --accent-hover: #06b6d4;
-  --accent-glow: rgba(8, 145, 178, 0.12);
-  --accent-gradient: linear-gradient(135deg, #0891b2, #6366f1);
+  --accent: #0D5C53;
+  --accent-hover: #147A6E;
+  --accent-glow: rgba(13, 92, 83, 0.15);
+  --accent-gradient: linear-gradient(135deg, #0D5C53, #168a7a);
 
   --profit: #059669;
   --profit-bg: rgba(5, 150, 105, 0.08);
@@ -53,16 +53,16 @@ body {
   --loss-bg: rgba(220, 38, 38, 0.08);
   --loss-border: rgba(220, 38, 38, 0.2);
 
-  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.06);
-  --shadow-card-hover: 0 8px 40px rgba(8, 145, 178, 0.1);
-  --shadow-modal: 0 24px 80px rgba(0, 0, 0, 0.15);
+  --shadow-card: 0 4px 16px rgba(13, 92, 83, 0.04);
+  --shadow-card-hover: 0 12px 32px rgba(13, 92, 83, 0.08);
+  --shadow-modal: 0 24px 80px rgba(13, 92, 83, 0.15);
 
   --glass-blur: blur(12px);
   --glass-saturate: saturate(1.2);
 
-  --scrollbar-track: #e2e8f0;
-  --scrollbar-thumb: #cbd5e0;
-  --scrollbar-thumb-hover: #a0aec0;
+  --scrollbar-track: #F4F7F6;
+  --scrollbar-thumb: #D1D9D8;
+  --scrollbar-thumb-hover: #A0B0AE;
 }
 
 /* ===== Theme Tokens — Dark ===== */
@@ -132,10 +132,13 @@ body {
 /* ===== Utility Classes ===== */
 .glass {
   background: var(--bg-card);
-  backdrop-filter: var(--glass-blur) var(--glass-saturate);
-  -webkit-backdrop-filter: var(--glass-blur) var(--glass-saturate);
   border: 1px solid var(--border-card);
-  border-radius: 16px;
+  border-radius: 24px;
+}
+
+.pill-btn {
+  border-radius: 9999px;
+  font-weight: 600;
 }
 
 .profit-text { color: var(--profit); }

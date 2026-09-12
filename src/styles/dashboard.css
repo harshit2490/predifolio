@@ -18,10 +18,8 @@
 .summary-card {
   padding: 24px;
   background: var(--bg-card);
-  backdrop-filter: var(--glass-blur) var(--glass-saturate);
-  -webkit-backdrop-filter: var(--glass-blur) var(--glass-saturate);
   border: 1px solid var(--border-card);
-  border-radius: 16px;
+  border-radius: 24px;
   box-shadow: var(--shadow-card);
   transition: all 0.3s ease;
 }
@@ -142,11 +140,11 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 20px;
+  padding: 12px 24px;
   background: var(--accent-gradient);
   color: white;
   border: none;
-  border-radius: 12px;
+  border-radius: 9999px;
   font-size: 0.9rem;
   font-weight: 600;
   font-family: inherit;
@@ -157,7 +155,7 @@
 
 .add-stock-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 212, 170, 0.3);
+  box-shadow: 0 6px 20px var(--accent-glow);
 }
 
 .add-stock-btn:active {
@@ -168,10 +166,10 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 20px;
+  padding: 12px 24px;
   background: var(--bg-input);
   border: 1px solid var(--border-input);
-  border-radius: 12px;
+  border-radius: 9999px;
   color: var(--text-secondary);
   font-size: 0.9rem;
   font-weight: 500;
@@ -388,11 +386,11 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 24px;
+  padding: 12px 28px;
   background: var(--accent-gradient);
   color: white;
   border: none;
-  border-radius: 12px;
+  border-radius: 9999px;
   font-size: 0.95rem;
   font-weight: 600;
   font-family: inherit;
@@ -402,7 +400,7 @@
 
 .empty-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 212, 170, 0.3);
+  box-shadow: 0 6px 20px var(--accent-glow);
 }
 
 /* ===== Responsive ===== */

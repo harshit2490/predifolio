@@ -5,9 +5,7 @@
   z-index: 100;
   padding: 16px 24px;
   background: var(--bg-card);
-  backdrop-filter: var(--glass-blur) var(--glass-saturate);
-  -webkit-backdrop-filter: var(--glass-blur) var(--glass-saturate);
-  border-bottom: 1px solid var(--border-card);
+  box-shadow: 0 1px 4px rgba(13, 92, 83, 0.05);
   display: flex;
   align-items: center;
   justify-content: space-between;

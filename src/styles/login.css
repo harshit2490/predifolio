@@ -1,4 +1,4 @@
-/* ===== Login Page ===== */
+/* ===== Login Page (Vestor Light Theme) ===== */
 .login-page {
   min-height: 100vh;
   display: flex;
@@ -7,50 +7,33 @@
   padding: 20px;
   position: relative;
   overflow: hidden;
+  background-color: var(--bg-primary);
 }
 
 .login-bg {
   position: fixed;
   inset: 0;
   background: 
-    radial-gradient(ellipse at 20% 50%, rgba(0, 212, 170, 0.12) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 20%, rgba(0, 124, 240, 0.1) 0%, transparent 50%),
-    radial-gradient(ellipse at 50% 80%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at top right, rgba(13, 92, 83, 0.05) 0%, transparent 40%),
+    radial-gradient(ellipse at bottom left, rgba(13, 92, 83, 0.03) 0%, transparent 40%),
     var(--bg-primary);
   z-index: 0;
 }
 
-[data-theme="light"] .login-bg {
+[data-theme="dark"] .login-bg {
   background: 
-    radial-gradient(ellipse at 20% 50%, rgba(8, 145, 178, 0.08) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 20%, rgba(99, 102, 241, 0.06) 0%, transparent 50%),
-    radial-gradient(ellipse at 50% 80%, rgba(8, 145, 178, 0.04) 0%, transparent 50%),
+    radial-gradient(ellipse at top right, rgba(0, 208, 156, 0.08) 0%, transparent 40%),
+    radial-gradient(ellipse at bottom left, rgba(0, 208, 156, 0.05) 0%, transparent 40%),
     var(--bg-primary);
-}
-
-/* Animated grid background */
-.login-grid {
-  position: fixed;
-  inset: 0;
-  background-image: 
-    linear-gradient(var(--border-card) 1px, transparent 1px),
-    linear-gradient(90deg, var(--border-card) 1px, transparent 1px);
-  background-size: 60px 60px;
-  opacity: 0.3;
-  z-index: 0;
-  mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%);
-  -webkit-mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%);
 }
 
 .login-card {
   position: relative;
   z-index: 1;
   width: 100%;
-  max-width: 420px;
+  max-width: 440px;
   padding: 48px 40px;
   background: var(--bg-card);
-  backdrop-filter: var(--glass-blur) var(--glass-saturate);
-  -webkit-backdrop-filter: var(--glass-blur) var(--glass-saturate);
   border: 1px solid var(--border-card);
   border-radius: 24px;
   box-shadow: var(--shadow-modal);
@@ -68,7 +51,7 @@
   margin: 0 auto 24px;
   font-size: 28px;
   color: white;
-  box-shadow: 0 8px 32px rgba(0, 212, 170, 0.25);
+  box-shadow: 0 8px 32px var(--accent-glow);
 }
 
 .login-title {
@@ -77,23 +60,24 @@
   font-weight: 700;
   margin-bottom: 8px;
   letter-spacing: -0.02em;
+  color: var(--text-primary);
 }
 
 .login-subtitle {
   text-align: center;
   color: var(--text-secondary);
-  font-size: 0.9rem;
-  margin-bottom: 24px;
+  font-size: 0.95rem;
+  margin-bottom: 32px;
 }
 
-/* Auth Mode Tabs (Sign In / Create Account) */
+/* Auth Mode Tabs */
 .auth-tab-switch {
   display: flex;
   background: var(--bg-input);
   border: 1px solid var(--border-input);
   border-radius: 12px;
   padding: 4px;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
 .auth-tab-btn {
@@ -113,13 +97,11 @@
 .auth-tab-btn.active {
   background: var(--bg-card);
   color: var(--text-primary);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
-[data-theme="light"] .auth-tab-btn.active {
-  background: #ffffff;
-  color: #0f172a;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+[data-theme="dark"] .auth-tab-btn.active {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .login-form {
@@ -176,11 +158,11 @@
 .login-btn {
   width: 100%;
   padding: 14px;
-  margin-top: 8px;
+  margin-top: 12px;
   background: var(--accent-gradient);
   color: white;
   border: none;
-  border-radius: 12px;
+  border-radius: 9999px; /* Pill shape */
   font-size: 1rem;
   font-weight: 600;
   font-family: inherit;
@@ -188,11 +170,16 @@
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
+  box-shadow: 0 4px 12px var(--accent-glow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .login-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 212, 170, 0.3);
+  box-shadow: 0 8px 24px var(--accent-glow);
 }
 
 .login-btn:active {
@@ -203,6 +190,7 @@
   opacity: 0.6;
   cursor: not-allowed;
   transform: none;
+  box-shadow: none;
 }
 
 .login-error {
@@ -222,8 +210,8 @@
 
 .auth-switch-footer {
   text-align: center;
-  margin-top: 6px;
-  font-size: 0.88rem;
+  margin-top: 12px;
+  font-size: 0.9rem;
   color: var(--text-secondary);
 }
 
@@ -245,7 +233,7 @@
   opacity: 0.8;
 }
 
-/* ===== Login Theme Toggle ===== */
+/* Theme Toggle Positioned Top Right */
 .login-theme-toggle {
   position: absolute;
   top: 24px;
@@ -258,8 +246,6 @@
   height: 44px;
   border-radius: 14px;
   background: var(--bg-card);
-  backdrop-filter: var(--glass-blur) var(--glass-saturate);
-  -webkit-backdrop-filter: var(--glass-blur) var(--glass-saturate);
   border: 1px solid var(--border-card);
   color: var(--text-secondary);
   cursor: pointer;
@@ -276,11 +262,7 @@
   box-shadow: var(--shadow-card-hover);
 }
 
-.login-theme-toggle:active {
-  transform: translateY(0);
-}
-
-/* ===== Password Input with Visibility Toggle ===== */
+/* Password Input */
 .password-input-wrapper {
   position: relative;
   display: flex;
@@ -316,7 +298,6 @@
   background: var(--bg-input-focus);
 }
 
-/* ===== Responsive ===== */
 @media (max-width: 480px) {
   .login-theme-toggle {
     top: 16px;

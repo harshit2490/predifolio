@@ -254,7 +254,7 @@
   background: var(--accent-gradient);
   color: white;
   border: none;
-  border-radius: 12px;
+  border-radius: 9999px;
   font-size: 1rem;
   font-weight: 600;
   font-family: inherit;
@@ -539,7 +539,7 @@
   padding: 11px 22px;
   background: var(--bg-input);
   border: 1px solid var(--border-input);
-  border-radius: 12px;
+  border-radius: 9999px;
   color: var(--text-secondary);
   font-size: 0.92rem;
   font-weight: 600;
@@ -564,7 +564,7 @@
   background: var(--accent-gradient);
   color: #ffffff;
   border: none;
-  border-radius: 12px;
+  border-radius: 9999px;
   font-size: 0.92rem;
   font-weight: 600;
   cursor: pointer;
@@ -766,7 +766,7 @@
 .delete-btn-cancel {
   flex: 1;
   padding: 12px 18px;
-  border-radius: 12px;
+  border-radius: 9999px;
   background: var(--bg-input);
   border: 1px solid var(--border-card);
   color: var(--text-secondary);
@@ -789,7 +789,7 @@
   justify-content: center;
   gap: 8px;
   padding: 12px 18px;
-  border-radius: 12px;
+  border-radius: 9999px;
   background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
   color: #ffffff;
   border: none;
