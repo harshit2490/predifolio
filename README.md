@@ -103,7 +103,7 @@ graph TD
 ## 📂 Codebase Directory Structure
 
 ```text
-stock-market-calci/
+predifolio/
 ├── public/                    # Static favicon and public assets
 ├── src/
 │   ├── components/            # UI components and feature modals
@@ -173,8 +173,8 @@ stock-market-calci/
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/harshit2490/stock-market-calci.git
-cd stock-market-calci
+git clone https://github.com/harshit2490/predifolio.git
+cd predifolio
 ```
 
 ### 2. Install dependencies

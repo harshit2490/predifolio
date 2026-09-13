@@ -6,7 +6,7 @@ This guide contains all the steps to push your project to GitHub, deploy it to N
 
 ## 1. Git & GitHub Setup Commands
 
-Run these commands in your project root terminal (`c:\Users\harshit\Desktop\project\stock-market-calci`):
+Run these commands in your project root terminal (`c:\Users\harshit\Desktop\project\predifolio`):
 
 ```bash
 # 1. Initialize Git in your project
@@ -22,7 +22,7 @@ git commit -m "feat: Stock market calculator with live prices, predictions, drag
 git branch -M main
 
 # 5. Link to your GitHub repository (replace <your-username> with your actual GitHub username)
-git remote add origin https://github.com/<your-username>/stock-market-calci.git
+git remote add origin https://github.com/<your-username>/predifolio.git
 
 # 6. Push code to GitHub
 git push -u origin main
@@ -44,7 +44,7 @@ git push -u origin main
 2. **Import Project**:
    - Click **"Add new site"** (top right) $\rightarrow$ select **"Import an existing project"**.
    - Select **GitHub** and authorize Netlify.
-   - Choose your repository: `stock-market-calci`.
+   - Choose your repository: `predifolio`.
 3. **Build Configuration**:
    - Netlify automatically detects the settings from your `netlify.toml`:
      - **Build command**: `npm run build`
@@ -65,7 +65,7 @@ git push -u origin main
 
 ### A. Create Project & Get Credentials
 1. Go to [supabase.com](https://supabase.com/) and sign in.
-2. Click **"New project"** $\rightarrow$ select your organization and enter a name (e.g. `stock-market-calci`).
+2. Click **"New project"** $\rightarrow$ select your organization and enter a name (e.g. `predifolio`).
 3. Set a strong database password and select region (e.g. `South Asia (Mumbai)`).
 4. Once created, go to **Project Settings $\rightarrow$ API**:
    - Copy **Project URL**
