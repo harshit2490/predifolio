@@ -72,15 +72,47 @@
 
 /* Auth Mode Tabs */
 .auth-tab-switch {
+  position: relative;
   display: flex;
   background: var(--bg-input);
   border: 1px solid var(--border-input);
   border-radius: 12px;
   padding: 4px;
   margin-bottom: 24px;
+  user-select: none;
+}
+
+.auth-tab-glider {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 4px;
+  width: calc(50% - 4px);
+  border: 0.25px solid rgba(0, 212, 170, 0.613);
+  background: var(--accent-gradient);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(13, 92, 83, 0.2);
+  transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+  z-index: 0;
+}
+
+[data-theme="dark"] .auth-tab-glider {
+  box-shadow: 0 2px 10px rgba(0, 212, 170, 0.35);
+}
+
+.auth-tab-glider.signup {
+  transform: translateX(100%);
+}
+
+.auth-tab-glider.signin,
+.auth-tab-glider.login {
+  transform: translateX(0%);
 }
 
 .auth-tab-btn {
+  position: relative;
+  z-index: 1;
   flex: 1;
   padding: 10px 12px;
   border: none;
@@ -90,18 +122,70 @@
   cursor: pointer;
   color: var(--text-secondary);
   background: transparent;
-  transition: all 0.2s ease;
+  transition: color 0.25s ease, transform 0.15s ease;
   font-family: inherit;
 }
 
 .auth-tab-btn.active {
-  background: var(--bg-card);
-  color: var(--text-primary);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  color: #ffffff;
 }
 
-[data-theme="dark"] .auth-tab-btn.active {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+.auth-tab-btn:hover:not(.active) {
+  color: var(--text-primary);
+}
+
+.auth-tab-btn:active {
+  transform: scale(0.98);
+}
+
+/* Smooth Collapsible Form Fields for Tab Switching */
+.collapsible-form-field {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: grid-template-rows 0.32s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+              transform 0.32s cubic-bezier(0.4, 0, 0.2, 1),
+              margin 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+  margin-top: 0;
+  margin-bottom: -16px;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.collapsible-form-field.expanded {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  transform: translateY(0);
+  margin-bottom: 0;
+  pointer-events: auto;
+  visibility: visible;
+}
+
+.collapsible-form-field > .form-group {
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* Micro-fade animation for text and icon transitions */
+.fade-text {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  animation: fadeInText 0.25s ease-out;
+}
+
+@keyframes fadeInText {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .login-form {

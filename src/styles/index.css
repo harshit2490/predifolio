@@ -91,7 +91,7 @@ body {
   --accent: #00d4aa;
   --accent-hover: #00eabb;
   --accent-glow: rgba(0, 212, 170, 0.15);
-  --accent-gradient: linear-gradient(135deg, #00d4aa, #007cf0);
+  --accent-gradient: linear-gradient(135deg, #00d4aa, #007cf0a1);
 
   --profit: #00e676;
   --profit-bg: rgba(0, 230, 118, 0.1);

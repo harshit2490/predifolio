@@ -152,22 +152,29 @@ function Login() {
           Predi<span className="gradient-text">Folio</span>
         </h1>
         <p className="login-subtitle">
-          {isSignUp
-            ? 'Create an account to start forecasting profits'
-            : 'Track investments & forecast sell targets'}
+          <span key={isSignUp ? 'signup-sub' : 'signin-sub'} className="fade-text">
+            {isSignUp
+              ? 'Create an account to start forecasting profits'
+              : 'Track investments & forecast sell targets'}
+          </span>
         </p>
 
-        {/* Auth Tabs */}
-        <div className="auth-tab-switch">
+        {/* Auth Tabs with Sliding Indicator */}
+        <div className="auth-tab-switch" role="tablist" aria-label="Authentication mode">
+          <div className={`auth-tab-glider ${isSignUp ? 'signup' : 'signin'}`} />
           <button
             type="button"
+            role="tab"
+            aria-selected={!isSignUp}
             className={`auth-tab-btn ${!isSignUp ? 'active' : ''}`}
             onClick={() => switchMode(false)}
           >
-            Sign In
+            Login
           </button>
           <button
             type="button"
+            role="tab"
+            aria-selected={isSignUp}
             className={`auth-tab-btn ${isSignUp ? 'active' : ''}`}
             onClick={() => switchMode(true)}
           >
@@ -178,7 +185,8 @@ function Login() {
         <form className="login-form" onSubmit={handleSubmit}>
           {error && <div className="login-error">{error}</div>}
 
-          {isSignUp && (
+          {/* Full Name (Sign Up only) - Smooth Collapsible */}
+          <div className={`collapsible-form-field ${isSignUp ? 'expanded' : 'collapsed'}`}>
             <div className="form-group">
               <label className="form-label" htmlFor="name">
                 <FiUser className="form-label-icon" /> Full Name
@@ -191,10 +199,11 @@ function Login() {
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. Harshit"
                 autoComplete="name"
-                required
+                required={isSignUp}
+                tabIndex={isSignUp ? 0 : -1}
               />
             </div>
-          )}
+          </div>
 
           <div className="form-group">
             <label className="form-label" htmlFor="username">
@@ -213,7 +222,8 @@ function Login() {
             />
           </div>
 
-          {isSignUp && (
+          {/* Email ID (Sign Up only) - Smooth Collapsible */}
+          <div className={`collapsible-form-field ${isSignUp ? 'expanded' : 'collapsed'}`}>
             <div className="form-group">
               <label className="form-label" htmlFor="email">
                 <FiMail className="form-label-icon" /> Email ID
@@ -226,10 +236,11 @@ function Login() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="name@example.com"
                 autoComplete="email"
-                required
+                required={isSignUp}
+                tabIndex={isSignUp ? 0 : -1}
               />
             </div>
-          )}
+          </div>
 
           <div className="form-group">
             <label className="form-label" htmlFor="password">
@@ -259,7 +270,8 @@ function Login() {
             </div>
           </div>
 
-          {isSignUp && (
+          {/* Confirm Password (Sign Up only) - Smooth Collapsible */}
+          <div className={`collapsible-form-field ${isSignUp ? 'expanded' : 'collapsed'}`}>
             <div className="form-group">
               <label className="form-label" htmlFor="confirmPassword">
                 <FiLock className="form-label-icon" /> Confirm Password
@@ -273,7 +285,8 @@ function Login() {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Repeat password"
                   autoComplete="new-password"
-                  required
+                  required={isSignUp}
+                  tabIndex={isSignUp ? 0 : -1}
                 />
                 <button
                   type="button"
@@ -287,42 +300,44 @@ function Login() {
                 </button>
               </div>
             </div>
-          )}
+          </div>
 
           <button type="submit" className="login-btn" disabled={loading}>
             {loading ? (
               'Processing...'
             ) : isSignUp ? (
-              <><FiCheck /> Create Account</>
+              <span key="btn-signup" className="fade-text"><FiCheck /> Create Account</span>
             ) : (
-              'Sign In'
+              <span key="btn-login" className="fade-text">Log In</span>
             )}
           </button>
 
           <div className="auth-switch-footer">
-            {isSignUp ? (
-              <p>
-                Already have an account?{' '}
-                <button
-                  type="button"
-                  className="auth-switch-link"
-                  onClick={() => switchMode(false)}
-                >
-                  Sign In
-                </button>
-              </p>
-            ) : (
-              <p>
-                Don't have an account?{' '}
-                <button
-                  type="button"
-                  className="auth-switch-link"
-                  onClick={() => switchMode(true)}
-                >
-                  Create Account
-                </button>
-              </p>
-            )}
+            <span key={isSignUp ? 'footer-signup' : 'footer-login'} className="fade-text">
+              {isSignUp ? (
+                <>
+                  Already have an account?{' '}
+                  <button
+                    type="button"
+                    className="auth-switch-link"
+                    onClick={() => switchMode(false)}
+                  >
+                    Login
+                  </button>
+                </>
+              ) : (
+                <>
+                  Don't have an account?{' '}
+                  <button
+                    type="button"
+                    className="auth-switch-link"
+                    onClick={() => switchMode(true)}
+                  >
+                    Create Account
+                  </button>
+                </>
+              )}
+            </span>
           </div>
         </form>
       </div>
