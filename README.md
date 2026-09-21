@@ -149,7 +149,7 @@ predifolio/
 ├── .npmrc                     # Netlify & CI/CD peer dependency configuration
 ├── index.html                 # HTML5 document template & SEO metadata
 ├── netlify.toml               # Netlify SPA redirect rules & build commands
-├── package.json               # Dependencies, scripts & React 19 overrides
+├── package.json               # Dependencies, scripts & React 19 library 
 └── README.md                  # Project documentation
 ```
 
